@@ -109,7 +109,7 @@ function modnoteslog_activate()
 	$db->insert_query("settings", $modnotesinstall);
 
 	rebuild_settings();
-	
+
 	$modnotes_notes = array(
 		"title"		=> 'modnotes_notes',
 		"template"	=> $db->escape_string('<tr>
@@ -175,6 +175,7 @@ class ModNotesLog {
 	* Log Notes
 	*
 	*/
+	
 	private static $lognotes;
 	
 	/*
@@ -204,6 +205,7 @@ class ModNotesLog {
 	 * Construct
 	 *
 	 */
+
 	public function __construct()
 	{
 		global $mybb;
@@ -215,17 +217,22 @@ class ModNotesLog {
 	* Save Note DB
 	*
 	*/
+
 	public function do_modnotes($note)
 	{
-		global $db,$lang,$mybb;
+		global $db, $lang, $mybb;
+
 		$this->verify->verify_note($note);
+
 		$update = array( 
 			"uid"	=> $mybb->user['uid'],
 			"text"	=> $note,
 			"date" 	=> TIME_NOW
 		); 
+
 		$nid = $db->insert_query("modnotes", $update);
 		$nlid = $db->insert_query("modnoteslog", $update);
+
 		redirect("modcp.php", $lang->redirect_modnotes);
 	}
 	
@@ -236,7 +243,7 @@ class ModNotesLog {
 	
 	public function do_deletenote()
 	{
-		global $db, $mybb,$lang;
+		global $db, $mybb, $lang;
 		if($mybb->input['action'] == "deletenote")
 		{
 			$db->query("DELETE FROM ".TABLE_PREFIX."modnotes WHERE nid=".$mybb->input['nid']);
@@ -248,6 +255,7 @@ class ModNotesLog {
 	* Table Notes
 	*
 	*/
+
 	public function modnoteslogtable($trow,$avatar,$username,$date,$time,$nid,$text)
 	{
 		global $templates;
@@ -262,29 +270,35 @@ class ModNotesLog {
 	
 	public function logmodcp()
 	{
-		global $db,$mybb,$templates,$modnoteslog,$mnl,$theme,$lang;
+		global $db, $mybb, $templates, $modnoteslog, $mnl, $theme, $lang;
+
 		$query = $db->simple_select('modnotes', 'COUNT(nid) AS notes', '', array('limit' => 1));
 		$quantity = $db->fetch_field($query, "notes");
 		$page = intval($mybb->input['page']);
 		$perpage = $mybb->settings['modnotes_pagination'];
+
 		if($page > 0)
 		{
 			$start = ($page - 1) * $perpage;
 			$pages = $quantity / $perpage;
 			$pages = ceil($pages);
+
 			if($page > $pages || $page <= 0)
 			{
 				$start = 0;
 				$page = 1;
 			}
 		}
+
 		else
 		{
 			$start = 0;
 			$page = 1;
 		}
+
 		$modcp_page = "modcp.php";
 		$query = $db->query('SELECT * FROM '.TABLE_PREFIX.'modnotes ORDER BY nid DESC LIMIT ' . $start . ', ' . $perpage);
+
 		while($note = $db->fetch_array($query))
 		{
 			$query_users = $db->simple_select("users", "*", "uid=".$note['uid']);
@@ -296,10 +310,12 @@ class ModNotesLog {
 			$date = my_date($mybb->settings['dateformat'], $note['date']);
 			$time = my_date($mybb->settings['timeformat'], $note['date']);
 			$style = alt_trow();
-			$avatar = (!empty($avatar)) ? $avatar : "images/avatars/invalid_url.gif";
+			$avatar = (!empty($avatar)) ? $avatar : "images/default_avatar.png";
 			$modnoteslog .= $this->modnoteslogtable($style,$avatar,$username,$date,$time,$note['nid'],$note['text']);
 		}
+
 		global $pagination;
+
 		$pagination = multipage($quantity, (int)$perpage, (int)$page, $modcp_page);
 		eval("\$mnl = \"".$templates->get("modnotes")."\";");
 	}
@@ -308,6 +324,7 @@ class ModNotesLog {
 	* New Log
 	*
 	*/
+
 	public function new_table_log()
 	{
 		$this->Admin->load_Mod_Notes_Log();
@@ -317,6 +334,7 @@ class ModNotesLog {
 	* New Menu ->Logs Administration <-
 	*
 	*/
+
 	public function menulogs(&$actions)
 	{
      $this->verify->menulogs($actions);
@@ -330,6 +348,7 @@ class ModNotesLog_Verify {
 	* Redirect ERROR*
 	*
 	*/
+
 	public function verify_redirect()
 	{
       global $lang;
@@ -347,6 +366,7 @@ class ModNotesLog_Verify {
 	public function verify_note($e)
 	{
 		global $mybb;
+
 		if(my_strlen(trim_blank_chrs($e)) > $mybb->settings['modnotes_chars'])
 		{
 			return true;
@@ -361,9 +381,10 @@ class ModNotesLog_Verify {
 	* New Action menu
 	*
 	*/
+
 	public function menulogs(&$action)
 	{
-	 global $lang;
+	    global $lang;
 
         $lang->load("modnoteslog");
 
@@ -374,16 +395,19 @@ class ModNotesLog_Verify {
 
 
 class ModNotesLog_Admin {
+
 	/*
 	* Log Notes Administration
 	*
 	*/
+
 	private static $lognotes_admin;
 	
 	/*
 	* Return Class ModNotesLog_Admin
 	*
 	*/
+
 	public static function Admin()
 	{
 		if(!is_object($lognotes_admin))
@@ -398,6 +422,7 @@ class ModNotesLog_Admin {
 	* Load ModNotesLog admin
 	*
 	*/
+
 	public function load_Mod_Notes_Log()
 	{
 		global $mybb, $db, $page, $cache, $lang;
@@ -409,16 +434,20 @@ class ModNotesLog_Admin {
 		{
 			return;
 		}
+
 		$page->add_breadcrumb_item($lang->modnoteslog_header);
 		$page->output_header($lang->modnoteslog_breadcrumb);
+
 		if($mybb->input['action'] == "dmn")
 		{
 			$this->emptydmn();
 		}
+
 		if($mybb->input['action'] == "dal")
 		{
 			$this->emptydal();
 		}
+
 		$this->admin_load_tables();
 		$page->output_footer();
 	}
@@ -430,6 +459,7 @@ class ModNotesLog_Admin {
 	public function link_profile($username,$uid)
 	{
 		global $mybb;
+
 		return "<a href=\"{$mybb->settings['bburl']}/".get_profile_link($uid)."\">{$username}</a>";
 	}
 	
@@ -440,22 +470,27 @@ class ModNotesLog_Admin {
 	
 	public function username_load($u)
 	{
-		global $db,$cache,$groupscache;
+		global $db, $cache, $groupscache;
+
 		$query_users = $db->simple_select("users", "*", "uid=".$u);
+
 		while($user = $db->fetch_array($query_users))
 		{
 			$groupscache = $cache->read("usergroups");
 			$ugroup = $groupscache[$user['usergroup']];
 			$format = $ugroup['namestyle'];
 			$userin = substr_count($format, "{username}");
+
 			if($userin == 0)
 			{
 				$format = "{username}";
 			}
+
 			$format = stripslashes($format);
 			$username = str_replace("{username}", $user['username'], $format);
 			$username = $this->link_profile($username, $user['uid']);
 		}
+
 		return $username;
 	}
 	
@@ -474,13 +509,10 @@ class ModNotesLog_Admin {
 		if(!$key)
 		{
 			$key = '110';
-		}	
+		}
+
 		$nav[$key] = array('id' => $lang->modnoteslog_nav_id, 'title' => $lang->modnoteslog_nav_title, 'link' => "index.php?module=tools-modnoteslog");
 	}
-
-
-
-
 	
 	/*
 	* Load Time AND date
@@ -490,8 +522,10 @@ class ModNotesLog_Admin {
 	public function date_time($dt)
 	{
 		global $mybb;
+
 		$date = my_date($mybb->settings['dateformat'], $dt);
 		$time = my_date($mybb->settings['timeformat'], $dt);
+
 		return $date.",".$time;
 	}
 	
@@ -521,6 +555,7 @@ class ModNotesLog_Admin {
 			'link' => "index.php?module=tools-modnoteslog&action=dmn\" onclick=\"return confirm('want to empty the notes of moderation?')",
 			'description' => ""
 		);
+
 		$page->output_nav_tabs($tabs,"lognotes");
 	}
 	
@@ -528,6 +563,7 @@ class ModNotesLog_Admin {
 	* Empty Notes moderation
 	*
 	*/
+
 	public function emptydmn()
 	{
 		global $db, $lang;
@@ -535,6 +571,7 @@ class ModNotesLog_Admin {
 		$lang->load("modnoteslog");
 
 		$db->query("truncate ".TABLE_PREFIX."modnotes");
+
 		flash_message($lang->modnoteslog_flash_1, 'success');
 		admin_redirect("index.php?module=tools-modnoteslog");
 	}
@@ -543,6 +580,7 @@ class ModNotesLog_Admin {
 	* Empty Log Notes administration
 	*
 	*/
+
 	public function emptydal()
 	{
 		global $db, $lang;
@@ -550,6 +588,7 @@ class ModNotesLog_Admin {
 		$lang->load("modnoteslog");
 
 		$db->query("truncate ".TABLE_PREFIX."modnoteslog");
+
 		flash_message($lang->modnoteslog_flash_2, 'success');
 		admin_redirect("index.php?module=tools-modnoteslog");
 	}
@@ -558,6 +597,7 @@ class ModNotesLog_Admin {
 	* Table Admin Log
 	*
 	*/
+	
 	public function admin_load_tables()
 	{
 		global $db, $mybb, $lang;
@@ -568,22 +608,26 @@ class ModNotesLog_Admin {
 		$quantity = $db->fetch_field($query, "text");
 		$page = intval($mybb->input['page']);
 		$perpage = 20;
+
 		if($page > 0)
 		{
 			$start = ($page - 1) * $perpage;
 			$pages = $quantity / $perpage;
 			$pages = ceil($pages);
+
 			if($page > $pages || $page <= 0)
 			{
 				$start = 0;
 				$page = 1;
 			}
 		}
+
 		else
 		{
 			$start = 0;
 			$page = 1;
 		}
+
 		$this->tabsload();
 		$table = new Table;
 		$table->construct_header($lang->modnoteslog_username, array("width" => "15%"));
@@ -592,6 +636,7 @@ class ModNotesLog_Admin {
 		$table->construct_row();
 
 		$query = $db->query('SELECT * FROM '.TABLE_PREFIX.'modnoteslog ORDER BY nlid DESC LIMIT ' . $start . ', ' . $perpage);
+
 		while($note = $db->fetch_array($query))
 		{
 				$table->construct_cell($this->username_load($note['uid']));
@@ -607,6 +652,7 @@ class ModNotesLog_Admin {
 function modnoteslog_update_note()
 {
 	global $mybb;
+
 	return ModNotesLog::LogNotes()->do_modnotes($mybb->input['modnotes']);
 }
 
